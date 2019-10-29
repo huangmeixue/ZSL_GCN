@@ -23,12 +23,15 @@ class GCN_DATA(object):
             self.attributes_val, self.labels_val = self.get_unique_vector(data.attributes_val, data.labels_val)
         else:
             self.attributes_val, self.labels_val = self.get_unique_vector(data.attributes_test_unseen, data.labels_test_unseen)
+        self.attributes_train, self.attributes_val = np.ascontiguousarray(self.attributes_train),np.ascontiguousarray(self.attributes_val)
+        self.labels_train, self.labels_val = np.ascontiguousarray(self.labels_train), np.ascontiguousarray(self.labels_val)
         
         self.all_class_num = self.attributes_train.shape[0] + self.attributes_val.shape[0]
         self.all_attributes = self.get_all_attribute()
         self.adj = self.normalize_adj(self.build_adjacency(self.all_attributes))
+        self.adj = self.sparse_to_tuple(self.adj)
 
-        self.pre_class_weight = self.load_class_weight(preclass_path)
+        self.true_class_weight = self.load_class_weight(preclass_path)
 
     def load_class_weight(self, preclass_path):
         model = torch.load(preclass_path, map_location=lambda storage, loc: storage)
@@ -79,5 +82,5 @@ class GCN_DATA(object):
         shape = torch.Size(sparse_mx.shape)
         return torch.sparse.FloatTensor(indices, values, shape)
 
-gcn_data = GCN_DATA(dataset,preprocess,validation,generalized,PREFINE_CLASS_path)
-print(gcn_data.adj)
+#gcn_data = GCN_DATA(dataset,preprocess,validation,generalized,PREFINE_CLASS_path)
+#print(gcn_data.adj)
