@@ -10,13 +10,13 @@ class GraphConvolution(Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
     """
-    def __init__(self, in_features, out_features, bias=True):
+    def __init__(self, input_dim, output_dim, bias=True):
         super(GraphConvolution, self).__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-        self.weight = Parameter(torch.FloatTensor(in_features, out_features))
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.weight = Parameter(torch.FloatTensor(input_dim, output_dim))
         if bias:
-            self.bias = Parameter(torch.FloatTensor(out_features))
+            self.bias = Parameter(torch.FloatTensor(output_dim))
         else:
             self.register_parameter('bias', None)
         self.reset_parameters()
@@ -37,5 +37,5 @@ class GraphConvolution(Module):
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
-               + str(self.in_features) + ' -> ' \
-               + str(self.out_features) + ')'
+               + str(self.input_dim) + ' -> ' \
+               + str(self.output_dim) + ')'

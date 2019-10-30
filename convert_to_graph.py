@@ -3,12 +3,13 @@ import numpy as np
 import scipy.sparse as sp
 import torch
 import util
+from sklearn.metrics.pairwise import rbf_kernel
 
 validation = False
 generalized = True
 preprocess = True
 OVERFLOW_MARGIN = 1e-8
-ADJACENCY_SCALER = 0.1
+ADJACENCY_SCALER = 0.01
 dataset = "AWA1"
 npy_dir = os.path.join("/data3/huangmeixue/Dataset",dataset)
 PREFINE_CLASS_path = "/data3/huangmeixue/ZSL_GCN/Model_GCN/"+dataset+"/prefine_class.pth"
@@ -29,6 +30,7 @@ class GCN_DATA(object):
         self.all_class_num = self.attributes_train.shape[0] + self.attributes_val.shape[0]
         self.all_attributes = self.get_all_attribute()
         self.adj = self.normalize_adj(self.build_adjacency(self.all_attributes))
+        #self.adj = self.normalize_adj(self.build_adjacency_topk(self.all_attributes, topk=10))
         self.adj = self.sparse_to_tuple(self.adj)
 
         self.true_class_weight = self.load_class_weight(preclass_path)
@@ -64,6 +66,15 @@ class GCN_DATA(object):
         adjacency = np.exp(-1 * distances / ADJACENCY_SCALER)
         return adjacency
 
+    def build_adjacency_topk(self, attributes, topk=10):
+        # build top_k adjacency matrix according to rbf_kernel
+        rbf_adjacency = rbf_kernel(attributes,attributes)
+        topk_max = np.argsort(rbf_adjacency, axis=1)[:,-topk:]
+        topk_adjacency = np.zeros(rbf_adjacency.shape)
+        for col_id in topk_max.T:
+            topk_adjacency[np.arange(rbf_adjacency.shape[0]), col_id] = 1.0
+        return topk_adjacency
+
     def normalize_adj(self, adj):
         # adjacency matrix is self-connect and normalize Symmetrically
         adj = sp.coo_matrix(adj)
@@ -83,4 +94,3 @@ class GCN_DATA(object):
         return torch.sparse.FloatTensor(indices, values, shape)
 
 #gcn_data = GCN_DATA(dataset,preprocess,validation,generalized,PREFINE_CLASS_path)
-#print(gcn_data.adj)
